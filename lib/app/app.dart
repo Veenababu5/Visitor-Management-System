@@ -4,7 +4,7 @@ import '../providers/auth_provider.dart';
 import '../providers/registration_provider.dart';
 import '../providers/visit_provider.dart';
 import '../providers/visitor_provider.dart';
-import '../screens/visitor/welcome/welcome_screen.dart';
+import '../screens/visitor/welcome/role_selection_screen.dart';
 import 'theme/app_theme.dart';
 
 class ITGVisitorApp extends StatelessWidget {
@@ -23,7 +23,7 @@ class ITGVisitorApp extends StatelessWidget {
         title: 'ITG Visitor Management System',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
-        home: const WelcomeScreen(),
+        home: const RoleSelectionScreen(),
       ),
     );
   }

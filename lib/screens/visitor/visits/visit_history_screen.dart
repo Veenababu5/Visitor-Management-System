@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../app/theme/app_colors.dart';
+import '../../../models/visit_status.dart';
+import '../../../providers/auth_provider.dart';
 import '../../../providers/visit_provider.dart';
 import '../../../widgets/badges/status_badge.dart';
 import '../../../widgets/buttons/primary_button.dart';
@@ -11,8 +13,13 @@ class VisitHistoryScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final authProv = Provider.of<AuthProvider>(context);
     final visitProv = Provider.of<VisitProvider>(context);
-    final visits = visitProv.historyVisits;
+    final userId = authProv.currentSession?.userId ?? '';
+
+    final visits = visitProv.getUserRequests(userId).where(
+      (v) => v.status == VisitStatus.completed || v.status == VisitStatus.checkedOut,
+    ).toList();
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -77,74 +84,97 @@ class VisitHistoryScreen extends StatelessWidget {
 
               const SizedBox(height: 14),
 
-              // Visit Cards List
+              // Visit Cards List or EMPTY STATE
               Expanded(
-                child: ListView.separated(
-                  itemCount: visits.length,
-                  separatorBuilder: (context, index) => const SizedBox(height: 10),
-                  itemBuilder: (context, index) {
-                    final item = visits[index];
-                    return Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: AppColors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.border),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              StatusBadge(status: item.status),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            '${item.date}  •  ${item.time}',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.navyPrimary,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'Meeting with ${item.hostName}',
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                          Text(
-                            item.department,
-                            style: const TextStyle(
-                              fontSize: 11,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                          if (item.duration.isNotEmpty) ...[
-                            const SizedBox(height: 4),
+                child: visits.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: const [
+                            Icon(Icons.history, size: 48, color: AppColors.textLight),
+                            SizedBox(height: 12),
                             Text(
-                              'Duration: ${item.duration}',
-                              style: const TextStyle(
-                                fontSize: 11,
-                                color: AppColors.textLight,
+                              'No past visits',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.navyPrimary,
                               ),
                             ),
+                            SizedBox(height: 4),
+                            Text(
+                              'Completed visits will appear here.',
+                              style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                            ),
                           ],
-                        ],
+                        ),
+                      )
+                    : ListView.separated(
+                        itemCount: visits.length,
+                        separatorBuilder: (context, index) => const SizedBox(height: 10),
+                        itemBuilder: (context, index) {
+                          final item = visits[index];
+                          return Container(
+                            padding: const EdgeInsets.all(14),
+                            decoration: BoxDecoration(
+                              color: AppColors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: AppColors.border),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    StatusBadge(status: item.status),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  '${item.date}  •  ${item.time}',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.navyPrimary,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Meeting with ${item.hostName}',
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.textPrimary,
+                                  ),
+                                ),
+                                Text(
+                                  item.department,
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                                if (item.duration.isNotEmpty) ...[
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Duration: ${item.duration}',
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      color: AppColors.textLight,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          );
+                        },
                       ),
-                    );
-                  },
-                ),
               ),
 
               const SizedBox(height: 12),
 
               PrimaryButton(
-                text: 'Visit Again',
+                text: 'Register for a Visit',
                 onPressed: () {
                   Navigator.push(
                     context,

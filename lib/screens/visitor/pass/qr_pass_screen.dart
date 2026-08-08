@@ -13,8 +13,15 @@ class QrPassScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final visitProv = Provider.of<VisitProvider>(context);
     final visit = visitProv.currentVisit;
-    final bool isApproved = visit.status == VisitStatus.approved;
 
+    if (visit == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Visitor Pass')),
+        body: const Center(child: Text('No active visit pass found.')),
+      );
+    }
+
+    final bool isApproved = visit.status == VisitStatus.approved;
     final String qrData =
         '{"visitId":"${visit.visitId}","token":"SECURE_ITG_TOKEN_9988"}';
 
@@ -58,7 +65,6 @@ class QrPassScreen extends StatelessWidget {
                         StatusBadge(status: visit.status),
                         const SizedBox(height: 16),
 
-                        // ── QR Code logic: Only generate/render if APPROVED ──
                         if (isApproved) ...[
                           Container(
                             padding: const EdgeInsets.all(12),
@@ -84,7 +90,6 @@ class QrPassScreen extends StatelessWidget {
                             ),
                           ),
                         ] else ...[
-                          // Pending / Unapproved State Banner
                           Container(
                             width: double.infinity,
                             padding: const EdgeInsets.all(16),
@@ -128,7 +133,6 @@ class QrPassScreen extends StatelessWidget {
                         const Divider(color: AppColors.border),
                         const SizedBox(height: 14),
 
-                        // Visitor Details
                         Align(
                           alignment: Alignment.centerLeft,
                           child: Column(
@@ -251,7 +255,6 @@ class QrPassScreen extends StatelessWidget {
               ),
 
               const SizedBox(height: 16),
-              // Action Buttons
               Row(
                 children: [
                   Expanded(

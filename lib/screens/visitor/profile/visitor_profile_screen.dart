@@ -1,15 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../app/theme/app_colors.dart';
+import '../../../providers/auth_provider.dart';
 import '../../../providers/visitor_provider.dart';
+import '../welcome/role_selection_screen.dart';
 
 class VisitorProfileScreen extends StatelessWidget {
   const VisitorProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final authProv = Provider.of<AuthProvider>(context);
     final visitorProv = Provider.of<VisitorProvider>(context);
+
+    final session = authProv.currentSession;
     final visitor = visitorProv.visitor;
+
+    final name = (session?.name.isNotEmpty == true)
+        ? session!.name
+        : (visitor?.name.isNotEmpty == true ? visitor!.name : 'Visitor Profile');
+    final mobile = (session?.mobile.isNotEmpty == true)
+        ? session!.mobile
+        : (visitor?.mobile.isNotEmpty == true ? visitor!.mobile : 'Not provided');
+    final email = (session?.email.isNotEmpty == true)
+        ? session!.email
+        : (visitor?.email.isNotEmpty == true ? visitor!.email : 'Not provided');
+    final company = (session?.company.isNotEmpty == true)
+        ? session!.company
+        : (visitor?.company.isNotEmpty == true ? visitor!.company : 'Not provided');
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -48,7 +66,7 @@ class VisitorProfileScreen extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               Text(
-                visitor.name,
+                name,
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -79,11 +97,11 @@ class VisitorProfileScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    _buildInfoRow('Mobile', visitor.mobile),
+                    _buildInfoRow('Mobile', mobile),
                     const SizedBox(height: 10),
-                    _buildInfoRow('Email', visitor.email),
+                    _buildInfoRow('Email', email),
                     const SizedBox(height: 10),
-                    _buildInfoRow('Company', visitor.company),
+                    _buildInfoRow('Company', company),
                   ],
                 ),
               ),
@@ -155,7 +173,13 @@ class VisitorProfileScreen extends StatelessWidget {
               // Sign Out Text Button
               TextButton(
                 onPressed: () {
-                  Navigator.popUntil(context, (route) => route.isFirst);
+                  authProv.logout();
+                  visitorProv.clearProfile();
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (context) => const RoleSelectionScreen()),
+                    (route) => false,
+                  );
                 },
                 child: const Text(
                   'Sign Out',

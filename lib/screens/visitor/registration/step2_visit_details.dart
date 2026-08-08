@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../app/theme/app_colors.dart';
+import '../../../models/employee_model.dart';
 import '../../../providers/registration_provider.dart';
 import '../../../repositories/mock/mock_data.dart';
-import '../../../models/employee_model.dart';
 import '../../../widgets/buttons/primary_button.dart';
 import '../../../widgets/common/step_indicator.dart';
 import 'step3_identity_verification.dart';
@@ -16,8 +16,9 @@ class Step2VisitDetailsScreen extends StatefulWidget {
 }
 
 class _Step2VisitDetailsScreenState extends State<Step2VisitDetailsScreen> {
-  bool _showValidationErrors = false;
+  final TextEditingController _notesController = TextEditingController();
   bool _departmentAutoFilled = false;
+  bool _showValidationError = false;
 
   Future<void> _pickDate(BuildContext context, RegistrationProvider regProvider) async {
     final now = DateTime.now();
@@ -48,7 +49,7 @@ class _Step2VisitDetailsScreenState extends State<Step2VisitDetailsScreen> {
   Future<void> _pickTime(BuildContext context, RegistrationProvider regProvider) async {
     final picked = await showTimePicker(
       context: context,
-      initialTime: regProvider.selectedTime ?? const TimeOfDay(hour: 10, minute: 0),
+      initialTime: regProvider.selectedTime ?? const TimeOfDay(hour: 10, minute: 30),
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
@@ -63,7 +64,6 @@ class _Step2VisitDetailsScreenState extends State<Step2VisitDetailsScreen> {
       },
     );
     if (picked != null) {
-      // Constrain to business hours 8 AM – 6 PM
       if (picked.hour < 8 || picked.hour >= 18) {
         if (!mounted) return;
         // ignore: use_build_context_synchronously
@@ -84,17 +84,29 @@ class _Step2VisitDetailsScreenState extends State<Step2VisitDetailsScreen> {
   Widget build(BuildContext context) {
     final regProvider = Provider.of<RegistrationProvider>(context);
 
+    // Default sample selections if empty
+    if (regProvider.selectedDate == null) {
+      regProvider.setDate(DateTime.now().add(const Duration(days: 1)));
+    }
+    if (regProvider.selectedTime == null) {
+      regProvider.setTime(const TimeOfDay(hour: 10, minute: 30));
+    }
+
     return Scaffold(
       backgroundColor: AppColors.white,
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context);
+            }
+          },
         ),
         actions: const [
           Padding(
             padding: EdgeInsets.only(right: 16.0),
-            child: Center(child: StepIndicator(currentStep: 2, totalSteps: 3)),
+            child: Center(child: StepIndicator(currentStep: 1, totalSteps: 3)),
           ),
         ],
         elevation: 0,
@@ -116,7 +128,7 @@ class _Step2VisitDetailsScreenState extends State<Step2VisitDetailsScreen> {
               ),
               const SizedBox(height: 4),
               const Text(
-                'Who are you visiting?',
+                "Who are you visiting?",
                 style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
               ),
               const SizedBox(height: 20),
@@ -125,9 +137,9 @@ class _Step2VisitDetailsScreenState extends State<Step2VisitDetailsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // ── Person to Meet (Typeahead) ────────────────────────
+                      // ── Person to Meet (Employee Typeahead Search) ────────
                       const Text(
-                        'Person to Meet',
+                        'Person to Meet (Select Employee)',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -138,7 +150,7 @@ class _Step2VisitDetailsScreenState extends State<Step2VisitDetailsScreen> {
                       Autocomplete<EmployeeModel>(
                         optionsBuilder: (TextEditingValue textEditingValue) {
                           if (textEditingValue.text.isEmpty) {
-                            return const Iterable<EmployeeModel>.empty();
+                            return MockData.employees;
                           }
                           return MockData.employees.where((emp) =>
                               emp.name.toLowerCase().contains(
@@ -148,10 +160,12 @@ class _Step2VisitDetailsScreenState extends State<Step2VisitDetailsScreen> {
                         displayStringForOption: (emp) => emp.name,
                         onSelected: (EmployeeModel emp) {
                           regProvider.setPersonToMeet(emp.name, emp.department);
-                          setState(() => _departmentAutoFilled = true);
+                          setState(() {
+                            _departmentAutoFilled = true;
+                            _showValidationError = false;
+                          });
                         },
                         fieldViewBuilder: (context, controller, focusNode, onSubmitted) {
-                          // Pre-populate controller if provider has a value
                           if (controller.text.isEmpty && regProvider.personToMeet.isNotEmpty) {
                             controller.text = regProvider.personToMeet;
                           }
@@ -165,7 +179,8 @@ class _Step2VisitDetailsScreenState extends State<Step2VisitDetailsScreen> {
                               }
                             },
                             decoration: InputDecoration(
-                              hintText: 'Search employee...',
+                              hintText: 'Type employee name (e.g. Veena, Sonal, Ved...)',
+                              hintStyle: const TextStyle(color: AppColors.textHint, fontSize: 13),
                               suffixIcon: const Icon(Icons.search, color: AppColors.textLight),
                               contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                               border: OutlineInputBorder(
@@ -180,8 +195,8 @@ class _Step2VisitDetailsScreenState extends State<Step2VisitDetailsScreen> {
                                 borderRadius: BorderRadius.circular(8),
                                 borderSide: const BorderSide(color: AppColors.blueAccent, width: 1.5),
                               ),
-                              errorText: _showValidationErrors && regProvider.personToMeet.isEmpty
-                                  ? 'Please select a person to meet'
+                              errorText: _showValidationError && regProvider.personToMeet.isEmpty
+                                  ? 'Please select or enter an employee to visit'
                                   : null,
                             ),
                           );
@@ -214,8 +229,14 @@ class _Step2VisitDetailsScreenState extends State<Step2VisitDetailsScreen> {
                                           ),
                                         ),
                                       ),
-                                      title: Text(emp.name, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-                                      subtitle: Text(emp.department, style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                                      title: Text(
+                                        emp.name,
+                                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                                      ),
+                                      subtitle: Text(
+                                        emp.department,
+                                        style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                                      ),
                                       onTap: () => onSelected(emp),
                                     );
                                   },
@@ -233,7 +254,7 @@ class _Step2VisitDetailsScreenState extends State<Step2VisitDetailsScreen> {
                               Icon(Icons.check_circle, size: 12, color: AppColors.approved),
                               SizedBox(width: 4),
                               Text(
-                                'Department auto-filled',
+                                'Department auto-filled from employee',
                                 style: TextStyle(fontSize: 11, color: AppColors.approved),
                               ),
                             ],
@@ -254,15 +275,13 @@ class _Step2VisitDetailsScreenState extends State<Step2VisitDetailsScreen> {
                       DropdownButtonFormField<String>(
                         initialValue: MockData.departments.contains(regProvider.department)
                             ? regProvider.department
-                            : null,
-                        onChanged: _departmentAutoFilled
-                            ? null
-                            : (val) {
-                                if (val != null) {
-                                  regProvider.department = val;
-                                  setState(() {});
-                                }
-                              },
+                            : MockData.departments.first,
+                        onChanged: (val) {
+                          if (val != null) {
+                            regProvider.department = val;
+                            setState(() {});
+                          }
+                        },
                         items: MockData.departments
                             .map((dept) => DropdownMenuItem(
                                   value: dept,
@@ -270,16 +289,11 @@ class _Step2VisitDetailsScreenState extends State<Step2VisitDetailsScreen> {
                                 ))
                             .toList(),
                         decoration: InputDecoration(
-                          hintText: 'Select department',
-                          hintStyle: const TextStyle(color: AppColors.textHint, fontSize: 14),
                           contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                             borderSide: const BorderSide(color: AppColors.border),
                           ),
-                          errorText: _showValidationErrors && regProvider.department.isEmpty
-                              ? 'Please select a department'
-                              : null,
                         ),
                       ),
                       const SizedBox(height: 14),
@@ -297,7 +311,7 @@ class _Step2VisitDetailsScreenState extends State<Step2VisitDetailsScreen> {
                       DropdownButtonFormField<String>(
                         initialValue: MockData.purposes.contains(regProvider.purposeOfVisit)
                             ? regProvider.purposeOfVisit
-                            : null,
+                            : MockData.purposes.first,
                         onChanged: (val) {
                           if (val != null) regProvider.purposeOfVisit = val;
                         },
@@ -330,7 +344,7 @@ class _Step2VisitDetailsScreenState extends State<Step2VisitDetailsScreen> {
                       DropdownButtonFormField<String>(
                         initialValue: MockData.visitCategories.contains(regProvider.visitCategory)
                             ? regProvider.visitCategory
-                            : null,
+                            : MockData.visitCategories.first,
                         onChanged: (val) {
                           if (val != null) regProvider.visitCategory = val;
                         },
@@ -350,131 +364,106 @@ class _Step2VisitDetailsScreenState extends State<Step2VisitDetailsScreen> {
                       ),
                       const SizedBox(height: 14),
 
-                      // ── Appointment Date & Expected Arrival ───────────────
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Appointment Date',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.textPrimary,
-                                  ),
-                                ),
-                                const SizedBox(height: 6),
-                                GestureDetector(
-                                  onTap: () => _pickDate(context, regProvider),
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.white,
-                                      border: Border.all(
-                                        color: _showValidationErrors && regProvider.selectedDate == null
-                                            ? AppColors.rejected
-                                            : AppColors.border,
-                                      ),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          regProvider.appointmentDate.isNotEmpty
-                                              ? regProvider.appointmentDate
-                                              : 'Select date',
-                                          style: TextStyle(
-                                            fontSize: 13,
-                                            color: regProvider.appointmentDate.isNotEmpty
-                                                ? AppColors.textPrimary
-                                                : AppColors.textHint,
-                                          ),
-                                        ),
-                                        const Icon(
-                                          Icons.calendar_today_outlined,
-                                          size: 16,
-                                          color: AppColors.textSecondary,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                if (_showValidationErrors && regProvider.selectedDate == null)
-                                  const Padding(
-                                    padding: EdgeInsets.only(top: 4, left: 4),
-                                    child: Text(
-                                      'Required',
-                                      style: TextStyle(fontSize: 11, color: AppColors.rejected),
-                                    ),
-                                  ),
-                              ],
-                            ),
+                      // ── Appointment Date ──────────────────────────────────
+                      const Text(
+                        'Appointment Date',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      GestureDetector(
+                        onTap: () => _pickDate(context, regProvider),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                          decoration: BoxDecoration(
+                            color: AppColors.white,
+                            border: Border.all(color: AppColors.border),
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Expected Arrival',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.textPrimary,
-                                  ),
-                                ),
-                                const SizedBox(height: 6),
-                                GestureDetector(
-                                  onTap: () => _pickTime(context, regProvider),
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.white,
-                                      border: Border.all(
-                                        color: _showValidationErrors && regProvider.selectedTime == null
-                                            ? AppColors.rejected
-                                            : AppColors.border,
-                                      ),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          regProvider.expectedArrival.isNotEmpty
-                                              ? regProvider.expectedArrival
-                                              : 'Select time',
-                                          style: TextStyle(
-                                            fontSize: 13,
-                                            color: regProvider.expectedArrival.isNotEmpty
-                                                ? AppColors.textPrimary
-                                                : AppColors.textHint,
-                                          ),
-                                        ),
-                                        const Icon(
-                                          Icons.access_time,
-                                          size: 16,
-                                          color: AppColors.textSecondary,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                if (_showValidationErrors && regProvider.selectedTime == null)
-                                  const Padding(
-                                    padding: EdgeInsets.only(top: 4, left: 4),
-                                    child: Text(
-                                      'Required',
-                                      style: TextStyle(fontSize: 11, color: AppColors.rejected),
-                                    ),
-                                  ),
-                              ],
-                            ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                regProvider.appointmentDate.isNotEmpty
+                                    ? regProvider.appointmentDate
+                                    : 'Select date',
+                                style: const TextStyle(fontSize: 14),
+                              ),
+                              const Icon(
+                                Icons.calendar_today_outlined,
+                                size: 18,
+                                color: AppColors.textSecondary,
+                              ),
+                            ],
                           ),
-                        ],
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+
+                      // ── Expected Arrival Time ─────────────────────────────
+                      const Text(
+                        'Expected Arrival Time',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      GestureDetector(
+                        onTap: () => _pickTime(context, regProvider),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                          decoration: BoxDecoration(
+                            color: AppColors.white,
+                            border: Border.all(color: AppColors.border),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                regProvider.expectedArrival.isNotEmpty
+                                    ? regProvider.expectedArrival
+                                    : 'Select time',
+                                style: const TextStyle(fontSize: 14),
+                              ),
+                              const Icon(
+                                Icons.access_time,
+                                size: 18,
+                                color: AppColors.textSecondary,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+
+                      // ── Notes (Optional) ──────────────────────────────────
+                      const Text(
+                        'Notes (Optional)',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      TextFormField(
+                        controller: _notesController,
+                        maxLines: 3,
+                        decoration: InputDecoration(
+                          hintText: 'Enter any additional notes',
+                          hintStyle: const TextStyle(color: AppColors.textHint, fontSize: 13),
+                          contentPadding: const EdgeInsets.all(14),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: const BorderSide(color: AppColors.border),
+                          ),
+                        ),
                       ),
                       const SizedBox(height: 20),
                     ],
@@ -485,15 +474,17 @@ class _Step2VisitDetailsScreenState extends State<Step2VisitDetailsScreen> {
                 text: 'Continue',
                 icon: Icons.arrow_forward,
                 onPressed: () {
-                  setState(() => _showValidationErrors = true);
-                  if (regProvider.isStep2Valid) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const Step3IdentityVerificationScreen(),
-                      ),
-                    );
+                  if (regProvider.personToMeet.isEmpty) {
+                    setState(() => _showValidationError = true);
+                    return;
                   }
+
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const Step3IdentityVerificationScreen(),
+                    ),
+                  );
                 },
               ),
               const SizedBox(height: 12),

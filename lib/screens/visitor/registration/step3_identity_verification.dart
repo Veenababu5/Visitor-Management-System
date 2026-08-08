@@ -5,8 +5,10 @@ import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../../app/theme/app_colors.dart';
+import '../../../providers/auth_provider.dart';
 import '../../../providers/registration_provider.dart';
 import '../../../providers/visit_provider.dart';
+import '../../../providers/visitor_provider.dart';
 import '../../../widgets/buttons/primary_button.dart';
 import '../../../widgets/common/step_indicator.dart';
 import 'registration_submitted.dart';
@@ -135,7 +137,7 @@ class _Step3IdentityVerificationScreenState
         actions: const [
           Padding(
             padding: EdgeInsets.only(right: 16.0),
-            child: Center(child: StepIndicator(currentStep: 3, totalSteps: 3)),
+            child: Center(child: StepIndicator(currentStep: 2, totalSteps: 3)),
           ),
         ],
         elevation: 0,
@@ -157,7 +159,7 @@ class _Step3IdentityVerificationScreenState
               ),
               const SizedBox(height: 4),
               const Text(
-                'For a faster check-in',
+                'Upload your documents',
                 style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
               ),
               const SizedBox(height: 20),
@@ -230,8 +232,8 @@ class _Step3IdentityVerificationScreenState
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(
-                                Icons.badge_outlined,
-                                color: AppColors.textSecondary,
+                                Icons.file_upload_outlined,
+                                color: AppColors.navyPrimary,
                                 size: 28,
                               ),
                             ),
@@ -253,34 +255,6 @@ class _Step3IdentityVerificationScreenState
                           ],
                         ),
                 ),
-              ),
-              const SizedBox(height: 6),
-              Row(
-                children: [
-                  const Expanded(
-                    child: Text(
-                      'Accepted documents: Government ID • Employee ID • Passport',
-                      style:
-                          TextStyle(fontSize: 11, color: AppColors.textSecondary),
-                    ),
-                  ),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: AppColors.pendingLight,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: const Text(
-                      'Recommended',
-                      style: TextStyle(
-                        fontSize: 9,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.pendingDark,
-                      ),
-                    ),
-                  ),
-                ],
               ),
 
               const SizedBox(height: 24),
@@ -373,14 +347,34 @@ class _Step3IdentityVerificationScreenState
                       ),
               ),
 
+              const SizedBox(height: 8),
+              const Text(
+                'Accepted documents: Government ID • Employee ID • Passport',
+                style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+              ),
+
               const Spacer(),
 
               PrimaryButton(
-                text: 'Submit Registration',
+                text: 'Continue',
+                icon: Icons.arrow_forward,
                 onPressed: () {
-                  final visitProv =
-                      Provider.of<VisitProvider>(context, listen: false);
+                  final authProv = Provider.of<AuthProvider>(context, listen: false);
+                  final visitorProv = Provider.of<VisitorProvider>(context, listen: false);
+                  final visitProv = Provider.of<VisitProvider>(context, listen: false);
+
+                  final userId = authProv.currentSession?.userId ?? 'GUEST_USER';
+                  final visitorName = visitorProv.visitor?.name.isNotEmpty == true
+                      ? visitorProv.visitor!.name
+                      : (regProvider.fullName.isNotEmpty ? regProvider.fullName : 'Visitor');
+                  final company = visitorProv.visitor?.company.isNotEmpty == true
+                      ? visitorProv.visitor!.company
+                      : (regProvider.companyName.isNotEmpty ? regProvider.companyName : 'Organization');
+
                   visitProv.submitNewVisit(
+                    userId: userId,
+                    visitorName: visitorName,
+                    company: company,
                     host: regProvider.personToMeet,
                     department: regProvider.department,
                     purpose: regProvider.purposeOfVisit,

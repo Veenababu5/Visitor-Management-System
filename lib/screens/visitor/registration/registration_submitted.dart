@@ -1,18 +1,47 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../app/theme/app_colors.dart';
+import '../../../providers/registration_provider.dart';
 import '../../../widgets/buttons/secondary_button.dart';
 import '../home/visitor_home_screen.dart';
+import '../requests/visit_requests_screen.dart';
 
 class RegistrationSubmittedScreen extends StatelessWidget {
   const RegistrationSubmittedScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final regProvider = Provider.of<RegistrationProvider>(context);
+
+    final visitorName = regProvider.fullName.isNotEmpty ? regProvider.fullName : 'Visitor';
+    final companyName = regProvider.companyName.isNotEmpty ? regProvider.companyName : 'Organization';
+    final hostName = regProvider.personToMeet.isNotEmpty ? regProvider.personToMeet : 'Anu Thomas';
+    final department = regProvider.department.isNotEmpty ? regProvider.department : 'IT Department';
+    final date = regProvider.appointmentDate.isNotEmpty ? regProvider.appointmentDate : '06 Aug 2026';
+    final time = regProvider.expectedArrival.isNotEmpty ? regProvider.expectedArrival : '10:30 AM';
+    final purpose = regProvider.purposeOfVisit.isNotEmpty ? regProvider.purposeOfVisit : 'Meeting';
+
     return Scaffold(
       backgroundColor: AppColors.white,
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+          onPressed: () {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const VisitorHomeScreen(),
+              ),
+              (route) => route.isFirst,
+            );
+          },
+        ),
+        elevation: 0,
+        backgroundColor: AppColors.white,
+      ),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           child: Column(
             children: [
               const Spacer(),
@@ -75,9 +104,9 @@ class RegistrationSubmittedScreen extends StatelessWidget {
                         const SizedBox(width: 10),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
-                            Text('Raj Kumar', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                            Text('ABC Technologies', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                          children: [
+                            Text(visitorName, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                            Text(companyName, style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
                           ],
                         ),
                       ],
@@ -89,27 +118,27 @@ class RegistrationSubmittedScreen extends StatelessWidget {
                         const SizedBox(width: 10),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
-                            Text('Visiting Anu Thomas', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                            Text('IT Department', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                          children: [
+                            Text('Visiting $hostName', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                            Text(department, style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
                           ],
                         ),
                       ],
                     ),
                     const SizedBox(height: 12),
                     Row(
-                      children: const [
-                        Icon(Icons.calendar_today, size: 16, color: AppColors.textSecondary),
-                        SizedBox(width: 10),
-                        Text('06 Aug 2026  •  10:30 AM', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
+                      children: [
+                        const Icon(Icons.calendar_today, size: 16, color: AppColors.textSecondary),
+                        const SizedBox(width: 10),
+                        Text('$date  •  $time', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
                       ],
                     ),
                     const SizedBox(height: 8),
                     Row(
-                      children: const [
-                        Icon(Icons.info_outline, size: 16, color: AppColors.textSecondary),
-                        SizedBox(width: 10),
-                        Text('Purpose: Meeting', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                      children: [
+                        const Icon(Icons.info_outline, size: 16, color: AppColors.textSecondary),
+                        const SizedBox(width: 10),
+                        Text('Purpose: $purpose', style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
                       ],
                     ),
                     const SizedBox(height: 14),
@@ -155,14 +184,14 @@ class RegistrationSubmittedScreen extends StatelessWidget {
               const Spacer(),
 
               SecondaryButton(
-                text: 'View Appointment Status',
+                text: 'View Visit Requests',
                 onPressed: () {
                   Navigator.pushAndRemoveUntil(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const VisitorHomeScreen(),
+                      builder: (context) => const VisitRequestsScreen(),
                     ),
-                    (route) => false,
+                    (route) => route.isFirst,
                   );
                 },
               ),
