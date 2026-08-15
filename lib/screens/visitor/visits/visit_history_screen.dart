@@ -5,8 +5,7 @@ import '../../../models/visit_status.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/visit_provider.dart';
 import '../../../widgets/badges/status_badge.dart';
-import '../../../widgets/buttons/primary_button.dart';
-import '../registration/step1_personal_details.dart';
+import '../home/visitor_home_screen.dart';
 
 class VisitHistoryScreen extends StatelessWidget {
   const VisitHistoryScreen({super.key});
@@ -27,9 +26,11 @@ class VisitHistoryScreen extends StatelessWidget {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
           onPressed: () {
-            if (Navigator.canPop(context)) {
-              Navigator.pop(context);
-            }
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => const VisitorHomeScreen()),
+              (route) => false,
+            );
           },
         ),
         title: const Text('Visit History'),
@@ -169,20 +170,6 @@ class VisitHistoryScreen extends StatelessWidget {
                           );
                         },
                       ),
-              ),
-
-              const SizedBox(height: 12),
-
-              PrimaryButton(
-                text: 'Register for a Visit',
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const Step1PersonalDetailsScreen(),
-                    ),
-                  );
-                },
               ),
               const SizedBox(height: 8),
             ],

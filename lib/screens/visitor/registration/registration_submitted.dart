@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../providers/registration_provider.dart';
-import '../../../widgets/buttons/secondary_button.dart';
 import '../home/visitor_home_screen.dart';
-import '../requests/visit_requests_screen.dart';
 
 class RegistrationSubmittedScreen extends StatelessWidget {
   const RegistrationSubmittedScreen({super.key});
@@ -182,19 +180,6 @@ class RegistrationSubmittedScreen extends StatelessWidget {
               ),
 
               const Spacer(),
-
-              SecondaryButton(
-                text: 'View Visit Requests',
-                onPressed: () {
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const VisitRequestsScreen(),
-                    ),
-                    (route) => route.isFirst,
-                  );
-                },
-              ),
               const SizedBox(height: 12),
             ],
           ),

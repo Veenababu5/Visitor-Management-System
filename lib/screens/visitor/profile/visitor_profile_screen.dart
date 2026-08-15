@@ -106,69 +106,7 @@ class VisitorProfileScreen extends StatelessWidget {
                 ),
               ),
 
-              const SizedBox(height: 12),
-
-              // ID Verification status row
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                decoration: BoxDecoration(
-                  color: AppColors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'ID Verification',
-                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-                    ),
-                    Row(
-                      children: const [
-                        Icon(Icons.check_circle, size: 14, color: AppColors.approved),
-                        SizedBox(width: 4),
-                        Text(
-                          'Verified',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.approved,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 12),
-
-              // Navigation options
-              Container(
-                decoration: BoxDecoration(
-                  color: AppColors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: Column(
-                  children: [
-                    ListTile(
-                      title: const Text('Edit Profile', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
-                      trailing: const Icon(Icons.chevron_right, size: 18, color: AppColors.textLight),
-                      onTap: () {},
-                    ),
-                    const Divider(height: 1, color: AppColors.border),
-                    ListTile(
-                      title: const Text('Privacy & Security', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
-                      trailing: const Icon(Icons.chevron_right, size: 18, color: AppColors.textLight),
-                      onTap: () {},
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 24),
+              const SizedBox(height: 32),
 
               // Sign Out Text Button
               TextButton(

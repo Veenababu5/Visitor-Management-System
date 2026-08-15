@@ -7,6 +7,7 @@ import '../../../providers/visitor_provider.dart';
 import '../../../widgets/buttons/primary_button.dart';
 import '../../../widgets/inputs/custom_text_field.dart';
 import '../home/visitor_home_screen.dart';
+import 'login_screen.dart';
 
 class UserRegistrationScreen extends StatefulWidget {
   const UserRegistrationScreen({super.key});
@@ -292,15 +293,24 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                       style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
                     ),
                     GestureDetector(
+                      behavior: HitTestBehavior.opaque,
                       onTap: () {
-                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const LoginScreen(),
+                          ),
+                        );
                       },
-                      child: const Text(
-                        'Login',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.navyPrimary,
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                        child: Text(
+                          'Login',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.navyPrimary,
+                          ),
                         ),
                       ),
                     ),

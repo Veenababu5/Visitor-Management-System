@@ -6,6 +6,7 @@ import '../../../models/visit_status.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/visit_provider.dart';
 import '../../../widgets/badges/status_badge.dart';
+import '../home/visitor_home_screen.dart';
 import '../visits/visit_detail_screen.dart';
 
 class VisitRequestsScreen extends StatefulWidget {
@@ -41,9 +42,11 @@ class _VisitRequestsScreenState extends State<VisitRequestsScreen> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
           onPressed: () {
-            if (Navigator.canPop(context)) {
-              Navigator.pop(context);
-            }
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => const VisitorHomeScreen()),
+              (route) => false,
+            );
           },
         ),
         title: const Text('Visit Requests'),

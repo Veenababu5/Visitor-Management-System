@@ -16,8 +16,6 @@ class Step2VisitDetailsScreen extends StatefulWidget {
 }
 
 class _Step2VisitDetailsScreenState extends State<Step2VisitDetailsScreen> {
-  final TextEditingController _notesController = TextEditingController();
-  bool _departmentAutoFilled = false;
   bool _showValidationError = false;
 
   Future<void> _pickDate(BuildContext context, RegistrationProvider regProvider) async {
@@ -84,6 +82,10 @@ class _Step2VisitDetailsScreenState extends State<Step2VisitDetailsScreen> {
   Widget build(BuildContext context) {
     final regProvider = Provider.of<RegistrationProvider>(context);
 
+    // Default department if not set
+    if (regProvider.department.isEmpty) {
+      regProvider.department = MockData.departments.first;
+    }
     // Default sample selections if empty
     if (regProvider.selectedDate == null) {
       regProvider.setDate(DateTime.now().add(const Duration(days: 1)));
@@ -91,6 +93,11 @@ class _Step2VisitDetailsScreenState extends State<Step2VisitDetailsScreen> {
     if (regProvider.selectedTime == null) {
       regProvider.setTime(const TimeOfDay(hour: 10, minute: 30));
     }
+
+    // Filter employees by currently selected department
+    final deptEmployees = MockData.employees.where((emp) {
+      return emp.department.toLowerCase() == regProvider.department.toLowerCase();
+    }).toList();
 
     return Scaffold(
       backgroundColor: AppColors.white,
@@ -137,7 +144,45 @@ class _Step2VisitDetailsScreenState extends State<Step2VisitDetailsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // ── Person to Meet (Employee Typeahead Search) ────────
+                      // ── 1. Department (FIRST) ──────────────────────────────
+                      const Text(
+                        'Department',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      DropdownButtonFormField<String>(
+                        initialValue: MockData.departments.contains(regProvider.department)
+                            ? regProvider.department
+                            : MockData.departments.first,
+                        onChanged: (val) {
+                          if (val != null) {
+                            regProvider.department = val;
+                            // Clear person to meet if they were from a different department
+                            regProvider.personToMeet = '';
+                            setState(() {});
+                          }
+                        },
+                        items: MockData.departments
+                            .map((dept) => DropdownMenuItem(
+                                  value: dept,
+                                  child: Text(dept, style: const TextStyle(fontSize: 14)),
+                                ))
+                            .toList(),
+                        decoration: InputDecoration(
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: const BorderSide(color: AppColors.border),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+
+                      // ── 2. Person to Meet (Filtered by Selected Department) ──
                       const Text(
                         'Person to Meet (Select Employee)',
                         style: TextStyle(
@@ -148,20 +193,20 @@ class _Step2VisitDetailsScreenState extends State<Step2VisitDetailsScreen> {
                       ),
                       const SizedBox(height: 6),
                       Autocomplete<EmployeeModel>(
+                        key: ValueKey(regProvider.department),
                         optionsBuilder: (TextEditingValue textEditingValue) {
                           if (textEditingValue.text.isEmpty) {
-                            return MockData.employees;
+                            return deptEmployees;
                           }
-                          return MockData.employees.where((emp) =>
+                          return deptEmployees.where((emp) =>
                               emp.name.toLowerCase().contains(
                                     textEditingValue.text.toLowerCase(),
                                   ));
                         },
                         displayStringForOption: (emp) => emp.name,
                         onSelected: (EmployeeModel emp) {
-                          regProvider.setPersonToMeet(emp.name, emp.department);
+                          regProvider.personToMeet = emp.name;
                           setState(() {
-                            _departmentAutoFilled = true;
                             _showValidationError = false;
                           });
                         },
@@ -174,12 +219,9 @@ class _Step2VisitDetailsScreenState extends State<Step2VisitDetailsScreen> {
                             focusNode: focusNode,
                             onChanged: (val) {
                               regProvider.personToMeet = val;
-                              if (_departmentAutoFilled) {
-                                setState(() => _departmentAutoFilled = false);
-                              }
                             },
                             decoration: InputDecoration(
-                              hintText: 'Type employee name (e.g. Veena, Sonal, Ved...)',
+                              hintText: 'Type or select employee in ${regProvider.department}',
                               hintStyle: const TextStyle(color: AppColors.textHint, fontSize: 13),
                               suffixIcon: const Icon(Icons.search, color: AppColors.textLight),
                               contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
@@ -196,7 +238,7 @@ class _Step2VisitDetailsScreenState extends State<Step2VisitDetailsScreen> {
                                 borderSide: const BorderSide(color: AppColors.blueAccent, width: 1.5),
                               ),
                               errorText: _showValidationError && regProvider.personToMeet.isEmpty
-                                  ? 'Please select or enter an employee to visit'
+                                  ? 'Please select an employee to visit'
                                   : null,
                             ),
                           );
@@ -246,59 +288,9 @@ class _Step2VisitDetailsScreenState extends State<Step2VisitDetailsScreen> {
                           );
                         },
                       ),
-                      if (_departmentAutoFilled)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 4),
-                          child: Row(
-                            children: const [
-                              Icon(Icons.check_circle, size: 12, color: AppColors.approved),
-                              SizedBox(width: 4),
-                              Text(
-                                'Department auto-filled from employee',
-                                style: TextStyle(fontSize: 11, color: AppColors.approved),
-                              ),
-                            ],
-                          ),
-                        ),
                       const SizedBox(height: 14),
 
-                      // ── Department ────────────────────────────────────────
-                      const Text(
-                        'Department',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      DropdownButtonFormField<String>(
-                        initialValue: MockData.departments.contains(regProvider.department)
-                            ? regProvider.department
-                            : MockData.departments.first,
-                        onChanged: (val) {
-                          if (val != null) {
-                            regProvider.department = val;
-                            setState(() {});
-                          }
-                        },
-                        items: MockData.departments
-                            .map((dept) => DropdownMenuItem(
-                                  value: dept,
-                                  child: Text(dept, style: const TextStyle(fontSize: 14)),
-                                ))
-                            .toList(),
-                        decoration: InputDecoration(
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(color: AppColors.border),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-
-                      // ── Purpose of Visit ──────────────────────────────────
+                      // ── 3. Purpose of Visit ───────────────────────────────
                       const Text(
                         'Purpose of Visit',
                         style: TextStyle(
@@ -331,7 +323,7 @@ class _Step2VisitDetailsScreenState extends State<Step2VisitDetailsScreen> {
                       ),
                       const SizedBox(height: 14),
 
-                      // ── Visit Category ────────────────────────────────────
+                      // ── 4. Visit Category ─────────────────────────────────
                       const Text(
                         'Visit Category',
                         style: TextStyle(
@@ -364,7 +356,7 @@ class _Step2VisitDetailsScreenState extends State<Step2VisitDetailsScreen> {
                       ),
                       const SizedBox(height: 14),
 
-                      // ── Appointment Date ──────────────────────────────────
+                      // ── 5. Appointment Date ───────────────────────────────
                       const Text(
                         'Appointment Date',
                         style: TextStyle(
@@ -403,7 +395,7 @@ class _Step2VisitDetailsScreenState extends State<Step2VisitDetailsScreen> {
                       ),
                       const SizedBox(height: 14),
 
-                      // ── Expected Arrival Time ─────────────────────────────
+                      // ── 6. Expected Arrival Time ──────────────────────────
                       const Text(
                         'Expected Arrival Time',
                         style: TextStyle(
@@ -437,31 +429,6 @@ class _Step2VisitDetailsScreenState extends State<Step2VisitDetailsScreen> {
                                 color: AppColors.textSecondary,
                               ),
                             ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-
-                      // ── Notes (Optional) ──────────────────────────────────
-                      const Text(
-                        'Notes (Optional)',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      TextFormField(
-                        controller: _notesController,
-                        maxLines: 3,
-                        decoration: InputDecoration(
-                          hintText: 'Enter any additional notes',
-                          hintStyle: const TextStyle(color: AppColors.textHint, fontSize: 13),
-                          contentPadding: const EdgeInsets.all(14),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(color: AppColors.border),
                           ),
                         ),
                       ),

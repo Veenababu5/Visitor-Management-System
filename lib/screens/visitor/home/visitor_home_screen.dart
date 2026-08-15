@@ -76,16 +76,15 @@ class _VisitorHomeScreenState extends State<VisitorHomeScreen> {
         : 'Visitor';
 
     final upcomingVisit = visitProv.getUpcomingVisit(userId);
-    final canPop = Navigator.canPop(context);
 
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Navy Header Banner ─────────────────────────────────────────────
+          // ── Navy Header Banner (NO back arrow) ──────────────────────────────
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.fromLTRB(16, 12, 20, 24),
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
             decoration: const BoxDecoration(
               color: AppColors.navyPrimary,
               borderRadius: BorderRadius.only(
@@ -101,14 +100,6 @@ class _VisitorHomeScreenState extends State<VisitorHomeScreen> {
                   children: [
                     Row(
                       children: [
-                        if (canPop)
-                          IconButton(
-                            icon: const Icon(Icons.arrow_back, color: AppColors.white),
-                            onPressed: () => Navigator.pop(context),
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                          ),
-                        if (canPop) const SizedBox(width: 8),
                         Container(
                           width: 32,
                           height: 32,
@@ -293,94 +284,76 @@ class _VisitorHomeScreenState extends State<VisitorHomeScreen> {
                           ),
                         ],
                       ),
-                      child: Column(
+                      child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                                decoration: BoxDecoration(
-                                  color: AppColors.surfaceGrey,
-                                  borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(color: AppColors.border),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: AppColors.surfaceGrey,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: AppColors.border),
+                            ),
+                            child: Column(
+                              children: [
+                                Text(
+                                  upcomingVisit.date.split(' ').first,
+                                  style: const TextStyle(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.navyPrimary,
+                                  ),
                                 ),
-                                child: Column(
-                                  children: [
-                                    Text(
-                                      upcomingVisit.date.split(' ').first,
-                                      style: const TextStyle(
-                                        fontSize: 22,
-                                        fontWeight: FontWeight.bold,
-                                        color: AppColors.navyPrimary,
-                                      ),
-                                    ),
-                                    Text(
-                                      upcomingVisit.date.split(' ').length > 1
-                                          ? upcomingVisit.date.split(' ')[1].toUpperCase()
-                                          : 'AUG',
-                                      style: const TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.bold,
-                                        color: AppColors.textSecondary,
-                                      ),
-                                    ),
-                                  ],
+                                Text(
+                                  upcomingVisit.date.split(' ').length > 1
+                                      ? upcomingVisit.date.split(' ')[1].toUpperCase()
+                                      : 'AUG',
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.textSecondary,
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(width: 14),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          upcomingVisit.time,
-                                          style: const TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.bold,
-                                            color: AppColors.textPrimary,
-                                          ),
-                                        ),
-                                        StatusBadge(status: upcomingVisit.status),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Text(
-                                      'Meeting with ${upcomingVisit.hostName}',
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
-                                        color: AppColors.navyPrimary,
-                                      ),
-                                    ),
-                                    Text(
-                                      upcomingVisit.department,
-                                      style: const TextStyle(
-                                        fontSize: 11,
-                                        color: AppColors.textSecondary,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                          const SizedBox(height: 12),
-                          const Divider(height: 1, color: AppColors.border),
-                          const SizedBox(height: 10),
-                          Row(
-                            children: [
-                              const Icon(Icons.location_on_outlined, size: 14, color: AppColors.textSecondary),
-                              const SizedBox(width: 4),
-                              Text(
-                                upcomingVisit.location,
-                                style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
-                              ),
-                            ],
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      upcomingVisit.time,
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.textPrimary,
+                                      ),
+                                    ),
+                                    StatusBadge(status: upcomingVisit.status),
+                                  ],
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  'Meeting with ${upcomingVisit.hostName}',
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.navyPrimary,
+                                  ),
+                                ),
+                                Text(
+                                  upcomingVisit.department,
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                       ),
