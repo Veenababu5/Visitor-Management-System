@@ -151,13 +151,7 @@ class RegistrationProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // ── Reset ─────────────────────────────────────────────────────────────────
-  void resetForm() {
-    _currentStep = 1;
-    fullName = '';
-    mobileNumber = '';
-    emailAddress = '';
-    companyName = '';
+  void resetVisitDetails() {
     personToMeet = '';
     department = '';
     purposeOfVisit = 'Meeting';
@@ -170,5 +164,15 @@ class RegistrationProvider extends ChangeNotifier {
     photoPath = null;
     photoBytes = null;
     notifyListeners();
+  }
+
+  // ── Reset ─────────────────────────────────────────────────────────────────
+  void resetForm() {
+    _currentStep = 1;
+    fullName = '';
+    mobileNumber = '';
+    emailAddress = '';
+    companyName = '';
+    resetVisitDetails();
   }
 }

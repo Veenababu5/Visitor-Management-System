@@ -18,6 +18,15 @@ class Step2VisitDetailsScreen extends StatefulWidget {
 class _Step2VisitDetailsScreenState extends State<Step2VisitDetailsScreen> {
   bool _showValidationError = false;
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final regProvider = Provider.of<RegistrationProvider>(context, listen: false);
+      regProvider.resetVisitDetails();
+    });
+  }
+
   Future<void> _pickDate(BuildContext context, RegistrationProvider regProvider) async {
     final now = DateTime.now();
     final picked = await showDatePicker(
@@ -85,13 +94,6 @@ class _Step2VisitDetailsScreenState extends State<Step2VisitDetailsScreen> {
     // Default department if not set
     if (regProvider.department.isEmpty) {
       regProvider.department = MockData.departments.first;
-    }
-    // Default sample selections if empty
-    if (regProvider.selectedDate == null) {
-      regProvider.setDate(DateTime.now().add(const Duration(days: 1)));
-    }
-    if (regProvider.selectedTime == null) {
-      regProvider.setTime(const TimeOfDay(hour: 10, minute: 30));
     }
 
     // Filter employees by currently selected department
@@ -193,7 +195,7 @@ class _Step2VisitDetailsScreenState extends State<Step2VisitDetailsScreen> {
                       ),
                       const SizedBox(height: 6),
                       Autocomplete<EmployeeModel>(
-                        key: ValueKey(regProvider.department),
+                        key: ValueKey('${regProvider.department}_${regProvider.personToMeet}'),
                         optionsBuilder: (TextEditingValue textEditingValue) {
                           if (textEditingValue.text.isEmpty) {
                             return deptEmployees;
@@ -211,7 +213,7 @@ class _Step2VisitDetailsScreenState extends State<Step2VisitDetailsScreen> {
                           });
                         },
                         fieldViewBuilder: (context, controller, focusNode, onSubmitted) {
-                          if (controller.text.isEmpty && regProvider.personToMeet.isNotEmpty) {
+                          if (controller.text != regProvider.personToMeet) {
                             controller.text = regProvider.personToMeet;
                           }
                           return TextFormField(
@@ -382,7 +384,12 @@ class _Step2VisitDetailsScreenState extends State<Step2VisitDetailsScreen> {
                                 regProvider.appointmentDate.isNotEmpty
                                     ? regProvider.appointmentDate
                                     : 'Select date',
-                                style: const TextStyle(fontSize: 14),
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: regProvider.appointmentDate.isNotEmpty
+                                      ? AppColors.textPrimary
+                                      : AppColors.textHint,
+                                ),
                               ),
                               const Icon(
                                 Icons.calendar_today_outlined,
@@ -421,7 +428,12 @@ class _Step2VisitDetailsScreenState extends State<Step2VisitDetailsScreen> {
                                 regProvider.expectedArrival.isNotEmpty
                                     ? regProvider.expectedArrival
                                     : 'Select time',
-                                style: const TextStyle(fontSize: 14),
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: regProvider.expectedArrival.isNotEmpty
+                                      ? AppColors.textPrimary
+                                      : AppColors.textHint,
+                                ),
                               ),
                               const Icon(
                                 Icons.access_time,
@@ -441,9 +453,17 @@ class _Step2VisitDetailsScreenState extends State<Step2VisitDetailsScreen> {
                 text: 'Continue',
                 icon: Icons.arrow_forward,
                 onPressed: () {
-                  if (regProvider.personToMeet.isEmpty) {
+                  if (regProvider.personToMeet.trim().isEmpty) {
                     setState(() => _showValidationError = true);
                     return;
+                  }
+
+                  // Default date/time if not picked
+                  if (regProvider.selectedDate == null) {
+                    regProvider.setDate(DateTime.now().add(const Duration(days: 1)));
+                  }
+                  if (regProvider.selectedTime == null) {
+                    regProvider.setTime(const TimeOfDay(hour: 10, minute: 30));
                   }
 
                   Navigator.push(

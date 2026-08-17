@@ -72,8 +72,6 @@ class VisitDetailScreen extends StatelessWidget {
                         _buildDetailRow('Date', visit.date),
                         const SizedBox(height: 14),
                         _buildDetailRow('Time', visit.time),
-                        const SizedBox(height: 14),
-                        _buildDetailRow('Location', visit.location),
 
                         const SizedBox(height: 20),
 

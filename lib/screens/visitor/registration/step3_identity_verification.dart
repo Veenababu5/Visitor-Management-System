@@ -382,6 +382,8 @@ class _Step3IdentityVerificationScreenState
                     time: regProvider.expectedArrival,
                   );
 
+                  regProvider.resetVisitDetails();
+
                   Navigator.pushAndRemoveUntil(
                     context,
                     MaterialPageRoute(

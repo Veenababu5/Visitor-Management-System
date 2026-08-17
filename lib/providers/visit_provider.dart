@@ -54,11 +54,12 @@ class VisitProvider extends ChangeNotifier {
 
   VisitModel? getUpcomingVisit(String userId) {
     final list = getUserRequests(userId);
-    if (list.isEmpty) return null;
-    return list.firstWhere(
-      (v) => v.status == VisitStatus.approved || v.status == VisitStatus.pending,
-      orElse: () => list.first,
-    );
+    for (final visit in list) {
+      if (visit.status == VisitStatus.approved) {
+        return visit;
+      }
+    }
+    return null;
   }
 
   void selectVisit(VisitModel visit) {
